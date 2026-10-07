@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>YJP 面試刷題</title>
+    
+    <!-- PWA 手機主螢幕設定 -->
+    <!-- 這裡控制手機桌面上顯示的 APP 名稱 -->
+    <meta name="apple-mobile-web-app-title" content="YJP">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <!-- 這裡控制手機桌面上顯示的 APP 圖示 (你可以把 href 裡面的網址換成你自己圖片的網址，或本地圖片路徑如 "./icon.png") -->
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2942/2942258.png">
+    
+    <!-- 引入 Tailwind CSS 負責排版 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 引入 React 核心庫 -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    
+    <!-- 引入 Babel 以便在瀏覽器中直接編譯 JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        body { background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
+        .no-select { -webkit-user-select: none; user-select: none; }
+        /* 美化選項按鈕的滾動條 */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // 30 道核心題庫
+        const QUESTIONS = [
+          { id: 1, cc: "CC1", q: "請解釋一下 ISO 19650 和傳統的 BS1192 有什麼核心區別？", a: "BS1192 是前身，角色劃分繁瑣；ISO 19650 是國際版，大幅簡化為 3 個核心項目角色，文字更淺白，旨在減少全球通用時的理解偏差。" },
+          { id: 2, cc: "CC1", q: "香港政府近年對 BIM 的強制要求是什麼？", a: "2018年起造價 3000 萬港元以上的政府工程必須採用 BIM；近年更強調與 AM/FM（設施管理）的整合。" },
+          { id: 3, cc: "CC1", q: "解釋 LOD（發展程度）400 和 500 的區別。", a: "LOD 400 是資產移交級(AODG)，需包含尺寸小於50mm的專業加工細節，支持預製生產；LOD 500 是竣工交付級，帶完整關聯屬性，用於後期運維。" },
+          { id: 4, cc: "CC1", q: "你如何理解 OIR, PIR, AIR 和 EIR 之間的關係？", a: "OIR(組織需求) 是最頂層，基於業務性質制定；向下推導到項目級PIR，資產級AIR，最後形成合同落地的 EIR(信息交換要求)。" },
+          { id: 5, cc: "CC1", q: "[場景] 業主完全不懂 BIM，你如何用最簡練的語言向他解釋 BIM 的價值？", a: "告訴他 BIM 最大的價值是“一改全改”。它是一個結構化數據庫。修改一扇門的高度，所有圖紙和造價表自動更新，極大降低返工成本。" },
+          { id: 6, cc: "CC1", q: "[場景] 在沒有任何業主 BIM 標準的私人項目中，你如何建立第一套體系？", a: "默認引入 CIC BIM Standards（如通用標準和對象命名指南）作為基線，確保信息管理有規可循。" },
+          { id: 7, cc: "CC2", q: "什麼是 OpenBIM？IFC 和 BCF 分別解決什麼問題？", a: "IFC 是核心數據架構，是原設計的“凍結副本”（類似PDF），修改必須退回原軟體。BCF 則是專門用於“跨軟體交換設計問題”的通信格式，自帶三維定位。" },
+          { id: 8, cc: "CC2", q: "在基礎設施項目中，你主要使用哪些工具？", a: "Civil 3D, Revit, Navisworks 組合。海外大項目（如 NEOM）則使用 Bentley 體系的 OpenRoads Designer 和 ProjectWise。" },
+          { id: 9, cc: "CC2", q: "[場景] 現成的軟體處理地下管線非常繁瑣耗時，你如何解決？", a: "提出我開發的 C# .NET 插件。直接讀取 2D Shapefile 的屬性和幾何數據，自動生成 3D 實體，徹底消除手動重繪和人為錯誤。" },
+          { id: 10, cc: "CC2", q: "[場景] 隧道項目中，曲面和結構的幾何參數極其複雜，你怎麼辦？", a: "利用 Dynamo 腳本，將 Civil 3D 的路線數據 (Alignment) 與 Revit 族結合，實現自動化、參數化的隧道結構生成。" },
+          { id: 11, cc: "CC2", q: "[場景] 現場掃描了點雲數據 (LiDAR) 後，模型更新的難點在哪裡？", a: "自動化掃描容易有遮擋遺漏（如暗房）。必須安排人員現場核對計數，並且掃描後第一時間在辦公室同步更新模型，切忌收尾才更新。" },
+          { id: 12, cc: "CC3", q: "你如何編製一份合格的 BIM Execution Plan (BEP)？包含哪些要素？", a: "明確人員角色、協作流程（ISO 19650 狀態切換）、模型拆分規則、軟硬件版本要求、LOD 要求等。" },
+          { id: 13, cc: "CC3", q: "請列舉你實操過的 4 種以上 BIM 用途 (BIM Uses)。", a: "Design Authoring (參數化建模), 3D Coordination (碰撞檢測), 4D Phase Planning (施工模擬), Existing Conditions Modelling (LiDAR基線模型)。" },
+          { id: 14, cc: "CC3", q: "[場景] 業主問你：“虛擬施工 (VP) 環節，哪些地方沒做好會導致翻車？”", a: "拋出“三字訣”：版、人、台。1. 版本（軟硬件版本錯亂導致返工）；2. 人員（權責需清晰）；3. 平台（CDE的算力和權限設置決定效率）。" },
+          { id: 15, cc: "CC3", q: "[場景] 碰撞檢測 (Clash Detection) 後生成了幾千個衝突，你如何高效處理？", a: "設置碰撞矩陣優先級。利用 BCF 格式將衝突直接發送到工程師的原生軟體中，召開協調會議實時漫遊，現場討論修改方案。" },
+          { id: 16, cc: "CC3", q: "[場景] 機電工程師投訴模型太卡，無法操作，你會如何優化？", a: "檢查模型的拆分規則 (Model Division)，按專業、系統或建築分區進行合理的 Federation；清理無效族文件和隱藏圖層。" },
+          { id: 17, cc: "CC4", q: "CDE (公共數據環境) 必須具備哪四個核心狀態文件夾？", a: "WIP (進行中) -> Shared (共享，需審核) -> Published (發布，用於交付) -> Archive (歸檔)。" },
+          { id: 18, cc: "CC4", q: "什麼是 COBie？它與 AIM (資產信息模型) 有什麼關係？", a: "COBie 是標準化的表格數據格式，用於在施工階段結構化收集設備信息，並在竣工時導入業主的設施管理 (FM) 系統中形成 AIM。" },
+          { id: 19, cc: "CC4", q: "[場景] 在 NEOM 這種多團隊巨型項目中，你如何保證信息不混亂？", a: "依賴 Bentley ProjectWise 設立極度嚴密的 8 階段審批流。利用 MIDP/TIDP 控制數據產出節奏。" },
+          { id: 20, cc: "CC4", q: "[場景] 同事把所有模型和文檔打成一個ZIP大包發給業主，有什麼風險？", a: "會導致新進人員無法檢索內容。必須按模塊拆分歸檔，並在 BIM 模型內嵌入可點擊的文檔鏈接 (Document Link)，交付前做二次檢查。" },
+          { id: 21, cc: "CC4", q: "[場景] 員工離職導致模型在個人 OneDrive 上無法訪問，你如何防範？", a: "強制所有工作在統一的 CDE (如 ACC) 中基於 Worksets 協同，禁止使用個人雲盤存儲項目核心資產。" },
+          { id: 22, cc: "CC5", q: "BIM 模型如果在合同中不明確，會導致什麼商業風險？", a: "容易出現“過度建模 (Over-model)”浪費成本，或“建模不足 (Under-model)”達不到驗收標準。" },
+          { id: 23, cc: "CC5", q: "關於 BIM 模型的知識產權 (IP)，通用法則是怎樣的？", a: "模型 IP 歸原設計作者所有，業主通過合同購買獲得“使用授權”。未經授權，其他項目團隊不可挪用。" },
+          { id: 24, cc: "CC5", q: "[場景] 傳統項目後期變更成本極高。引入 BIM 後你在商業上有什麼改變？", a: "推動“工作重心前移 (Front-loading)”。在前期多花精力利用 3D 模型打磨方案，消除空間衝突，大幅削減施工階段的高昂變更單風險。" },
+          { id: 25, cc: "CC5", q: "[場景] 你要在 PS 規範中加入 BIM 條款，最關鍵要寫明什麼？", a: "明確“Client's BIM Models”的法定地位（Native 還是 Open 格式具有約束力），界定好 MIDP 的交付節點。" },
+          { id: 26, cc: "CC5", q: "[場景] 分包商以“成本太高”為由拒絕提交 BIM 模型，你前期如何處理？", a: "在合同前置階段就將各方納入體系。制定明確的《准入信息計劃表》，提供統一的參數填報模板，通過早期培訓降低執行門檻。" },
+          { id: 27, cc: "CC6", q: "在向非技術高管匯報 BIM 進度時，你主要展示什麼？", a: "不談軟體細節，只展示核心數據儀表盤、資金流程節點調整、碰撞規避節省的預估成本，以及 4D 進度模擬。" },
+          { id: 28, cc: "CC6", q: "BIM 項目中，你認為最有效的溝通工具是什麼？", a: "不是郵件或 2D 圖紙，而是帶有問題定位、責任人追蹤狀態的閉環協作平台（如 ACC Issues 或基於 BCF 的工具）。" },
+          { id: 29, cc: "CC6", q: "[場景] 公司裡許多資深工程師習慣用2D畫好丟給建模員去“翻模”，你如何改變？", a: "這是心態問題。我會組織“數字化轉型”培訓，將枯燥規範轉化為實際流程。編寫“C# 插件使用手冊”，用提升效率的實際工具去打動他們。" },
+          { id: 30, cc: "CC6", q: "[場景] 跨專業協調會上機電和結構互不相讓，你如何主持大局？", a: "利用 Federated Model 實時漫遊。不強行替他們做決定，而是提供空間數據，引導雙方在 3D 視圖中討論改道路線，會後立刻發放 Action Items。" }
+        ];
+
+        const { useState, useEffect } = React;
+
+        const App = () => {
+            const [mode, setMode] = useState('ALL'); 
+            const [reviewList, setReviewList] = useState([]);
+            const [activeQueue, setActiveQueue] = useState([]);
+            const [currentIndex, setCurrentIndex] = useState(0);
+            
+            // 選擇題狀態
+            const [options, setOptions] = useState([]);
+            const [selectedOpt, setSelectedOpt] = useState(null);
+            const [isFinished, setIsFinished] = useState(false);
+
+            // 讀取本地保存的錯題本
+            useEffect(() => {
+                const saved = localStorage.getItem('yjp_ccbm_review');
+                if (saved) {
+                    try { setReviewList(JSON.parse(saved)); } catch (e) {}
+                }
+            }, []);
+
+            // 實時保存錯題本
+            useEffect(() => {
+                localStorage.setItem('yjp_ccbm_review', JSON.stringify(reviewList));
+            }, [reviewList]);
+
+            useEffect(() => {
+                startSession(mode);
+            }, [mode]);
+
+            // 打亂陣列順序
+            const shuffleArray = (array) => {
+                let newArr = [...array];
+                for (let i = newArr.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
+                }
+                return newArr;
+            };
+
+            const startSession = (currentMode) => {
+                let pool = currentMode === 'ALL' ? [...QUESTIONS] : QUESTIONS.filter(q => reviewList.includes(q.id));
+                if (pool.length > 0) {
+                    setActiveQueue(shuffleArray(pool));
+                    setCurrentIndex(0);
+                    setIsFinished(false);
+                } else {
+                    setActiveQueue([]);
+                    setIsFinished(true);
+                }
+            };
+
+            // 當前題目改變時，生成選擇題選項
+            useEffect(() => {
+                if (activeQueue.length > 0 && currentIndex < activeQueue.length) {
+                    const currentQ = activeQueue[currentIndex];
+                    // 隨機抽取 3 個錯誤答案作為干擾項
+                    const others = QUESTIONS.filter(q => q.id !== currentQ.id);
+                    const shuffledOthers = shuffleArray(others);
+                    const distractors = shuffledOthers.slice(0, 3).map(q => q.a);
+                    
+                    // 將正確答案與干擾項混合並打亂
+                    setOptions(shuffleArray([currentQ.a, ...distractors]));
+                    setSelectedOpt(null); // 重置選擇狀態
+                }
+            }, [currentIndex, activeQueue]);
+
+            const handleSelect = (opt) => {
+                if (selectedOpt !== null) return; // 防止重複點擊
+                setSelectedOpt(opt);
+                
+                const currentQ = activeQueue[currentIndex];
+                const isCorrect = opt === currentQ.a;
+                
+                let newReviewList = [...reviewList];
+                if (!isCorrect) {
+                    // 答錯，加入錯題本
+                    if (!newReviewList.includes(currentQ.id)) {
+                        newReviewList.push(currentQ.id);
+                    }
+                } else {
+                    // 答對，從錯題本移除
+                    newReviewList = newReviewList.filter(id => id !== currentQ.id);
+                }
+                setReviewList(newReviewList);
+            };
+
+            const handleNext = () => {
+                if (currentIndex < activeQueue.length - 1) {
+                    setCurrentIndex(prev => prev + 1);
+                } else {
+                    setIsFinished(true);
+                }
+            };
+
+            if (isFinished) {
+                return (
+                    <div className="flex flex-col items-center justify-center min-h-screen px-4 bg-slate-50">
+                        <div className="text-6xl mb-6">🏆</div>
+                        <h2 className="text-2xl font-bold mb-2 text-slate-800">
+                            {mode === 'REVIEW' && reviewList.length === 0 ? "太棒了！錯題已全部清空！" : "本輪測驗完成！"}
+                        </h2>
+                        <p className="text-slate-500 mb-8">選擇題模式有助於加深對所有概念的印象</p>
+                        <button onClick={() => startSession(mode)} className="px-8 py-4 bg-blue-600 text-white rounded-xl shadow-lg font-bold active:bg-blue-700 w-full max-w-xs">重新開始</button>
+                    </div>
+                );
+            }
+
+            if (activeQueue.length === 0) return null;
+            const currentQ = activeQueue[currentIndex];
+            const progressPercent = ((currentIndex) / activeQueue.length) * 100;
+
+            return (
+                <div className="min-h-screen flex flex-col max-w-md mx-auto relative pb-10 bg-slate-50">
+                    {/* 頂部導航 */}
+                    <div className="px-4 py-4 flex justify-between items-center bg-white shadow-sm mb-4">
+                        <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-sm">YJP</div>
+                            <h1 className="font-bold text-slate-800 text-lg">CCBM 面試實戰</h1>
+                        </div>
+                    </div>
+
+                    {/* 模式切換 */}
+                    <div className="px-4 mb-4">
+                        <div className="flex bg-slate-200 p-1 rounded-xl">
+                            <button 
+                                onClick={() => setMode('ALL')}
+                                className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${mode === 'ALL' ? 'bg-white shadow text-blue-600' : 'text-slate-500'}`}
+                            >
+                                隨機測驗 ({QUESTIONS.length})
+                            </button>
+                            <button 
+                                onClick={() => setMode('REVIEW')}
+                                className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${mode === 'REVIEW' ? 'bg-white shadow text-rose-600' : 'text-slate-500'}`}
+                            >
+                                錯題本 ({reviewList.length})
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* 答題區域 */}
+                    <div className="flex-1 px-4 flex flex-col mb-8">
+                        <div className="flex justify-between items-end mb-2 px-1">
+                            <span className="text-xs font-bold text-slate-400">Question {currentIndex + 1} of {activeQueue.length}</span>
+                        </div>
+                        <div className="w-full h-1.5 bg-slate-200 rounded-full mb-6 overflow-hidden">
+                            <div className="h-full bg-blue-600 transition-all duration-300" style={{ width: `${progressPercent}%` }}></div>
+                        </div>
+
+                        {/* 題目卡片 */}
+                        <div className="w-full bg-white shadow-lg shadow-slate-200/50 rounded-2xl p-6 mb-6">
+                            <div className="mb-3">
+                                <span className="px-3 py-1 bg-blue-50 text-blue-600 text-xs font-bold rounded-full">{currentQ.cc}</span>
+                            </div>
+                            <h3 className="text-xl font-bold leading-snug text-slate-800">{currentQ.q}</h3>
+                        </div>
+
+                        {/* 選項列表 */}
+                        <div className="flex flex-col gap-3">
+                            {options.map((opt, idx) => {
+                                const isSelected = selectedOpt === opt;
+                                const isCorrectAnswer = opt === currentQ.a;
+                                
+                                // 判斷選項的樣式狀態
+                                let btnStyle = "bg-white border-2 border-slate-100 text-slate-700 hover:border-blue-200";
+                                let icon = null;
+
+                                if (selectedOpt !== null) {
+                                    if (isCorrectAnswer) {
+                                        btnStyle = "bg-green-50 border-2 border-green-500 text-green-800 font-medium";
+                                        icon = "✅";
+                                    } else if (isSelected) {
+                                        btnStyle = "bg-rose-50 border-2 border-rose-500 text-rose-800 font-medium";
+                                        icon = "❌";
+                                    } else {
+                                        btnStyle = "bg-white border-2 border-slate-100 text-slate-400 opacity-60"; // 未被選中的錯誤答案
+                                    }
+                                }
+
+                                return (
+                                    <button 
+                                        key={idx}
+                                        onClick={() => handleSelect(opt)}
+                                        disabled={selectedOpt !== null}
+                                        className={`w-full text-left p-4 rounded-xl transition-all duration-200 active:scale-[0.98] ${btnStyle}`}
+                                    >
+                                        <div className="flex gap-3">
+                                            <div className="flex-shrink-0 mt-0.5">
+                                                {icon ? icon : <span className="w-5 h-5 rounded-full border-2 border-slate-200 block"></span>}
+                                            </div>
+                                            <p className="text-[15px] leading-relaxed">{opt}</p>
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        {/* 下一題按鈕 (僅在選擇後出現) */}
+                        {selectedOpt !== null && (
+                            <div className="mt-8 animate-fade-in">
+                                <button 
+                                    onClick={handleNext}
+                                    className="w-full py-4 bg-slate-800 active:bg-slate-900 text-white rounded-xl font-bold shadow-lg flex items-center justify-center gap-2"
+                                >
+                                    下一題
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
